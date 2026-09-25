@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resume_screener_api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source for live reload during development
+      - ./server:/app
+      # Persist storage (resumes + FAISS index) outside the container
+      - resume_storage:/app/storage/resumes
+      - faiss_storage:/app/storage/faiss_index
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./storage/resume_screener.db
+      - STORAGE_PATH=/app/storage/resumes
+      - FAISS_INDEX_PATH=/app/storage/faiss_index/index.faiss
+      - EMBEDDING_MODEL=all-MiniLM-L6-v2
+      - SPACY_MODEL=en_core_web_sm
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  resume_storage:
+  faiss_storage:

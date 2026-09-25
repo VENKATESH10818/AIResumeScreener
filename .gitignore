@@ -1,0 +1,42 @@
+# Node
+frontend/node_modules/
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+env/
+
+# Environment
+.env
+
+# Storage (uploaded files + FAISS index — large, machine-specific)
+server/storage/
+
+# Database
+*.db
+*.sqlite3
+
+# Models cache (sentence-transformers downloads)
+.cache/
+~/.cache/huggingface/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
