@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-STORAGE_PATH = os.getenv("STORAGE_PATH", "./storage/resumes")
+STORAGE_PATH = os.getenv("STORAGE_PATH", "/tmp/resumes")
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".doc", ".png", ".jpg", ".jpeg", ".tiff", ".tif", ".bmp", ".webp"}
 MAX_FILE_SIZE_MB = 10
 

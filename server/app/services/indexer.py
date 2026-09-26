@@ -29,16 +29,16 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _DEFAULT_RESUME_INDEX_PATH = os.getenv(
-    "FAISS_INDEX_PATH", "./storage/faiss_index/resume_index.faiss"
+    "FAISS_INDEX_PATH", "/tmp/faiss_index/resume_index.faiss"
 )
 _DEFAULT_RESUME_IDS_PATH = os.getenv(
-    "FAISS_IDS_PATH", "./storage/faiss_index/resume_ids.npy"
+    "FAISS_IDS_PATH", "/tmp/faiss_index/resume_ids.npy"
 )
 _DEFAULT_JD_INDEX_PATH = os.getenv(
-    "FAISS_JD_INDEX_PATH", "./storage/faiss_index/jd_index.faiss"
+    "FAISS_JD_INDEX_PATH", "/tmp/faiss_index/jd_index.faiss"
 )
 _DEFAULT_JD_IDS_PATH = os.getenv(
-    "FAISS_JD_IDS_PATH", "./storage/faiss_index/jd_ids.npy"
+    "FAISS_JD_IDS_PATH", "/tmp/faiss_index/jd_ids.npy"
 )
 
 

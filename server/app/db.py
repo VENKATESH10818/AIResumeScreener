@@ -29,7 +29,7 @@ from sqlalchemy.orm import DeclarativeBase, relationship
 # ---------------------------------------------------------------------------
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", "sqlite+aiosqlite:///./storage/resume_screener.db"
+    "DATABASE_URL", "sqlite+aiosqlite:////tmp/resume_screener.db"
 )
 
 _is_sqlite = "sqlite" in DATABASE_URL

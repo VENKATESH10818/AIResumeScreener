@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: ai-resume-screener-api
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: .
+    buildCommand: pip install -r requirements.txt && python -m spacy download en_core_web_sm
+    startCommand: cd server && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:////tmp/resume_screener.db
+      - key: STORAGE_PATH
+        value: /tmp/resumes
+      - key: FAISS_INDEX_PATH
+        value: /tmp/faiss_index/resume_index.faiss
+      - key: FAISS_IDS_PATH
+        value: /tmp/faiss_index/resume_ids.npy
+      - key: FAISS_JD_INDEX_PATH
+        value: /tmp/faiss_index/jd_index.faiss
+      - key: FAISS_JD_IDS_PATH
+        value: /tmp/faiss_index/jd_ids.npy
+      - key: EMBEDDING_MODEL
+        value: all-MiniLM-L6-v2
+      - key: SPACY_MODEL
+        value: en_core_web_sm
+      - key: CORS_ORIGINS
+        value: http://localhost:5173,http://localhost:3000
+      - key: LOG_LEVEL
+        value: INFO
