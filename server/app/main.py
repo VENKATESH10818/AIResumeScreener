@@ -16,6 +16,7 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
@@ -103,15 +104,17 @@ app = FastAPI(
 )
 
 # ---------------------------------------------------------------------------
-# CORS — allow the React UI (and curl) to call the API during local dev
+# CORS — allow the React UI (and curl) to call the API during local dev & prod
 # ---------------------------------------------------------------------------
 
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5173")
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
+_origins = [o.strip() for o in CORS_ORIGINS.split(",") if o.strip()]
+_allow_all = "*" in _origins or not _origins
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in CORS_ORIGINS.split(",")],
-    allow_credentials=True,
+    allow_origins=["*"] if _allow_all else _origins,
+    allow_credentials=not _allow_all,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -186,12 +189,42 @@ async def readiness() -> dict:
     return {"status": "ready" if all_ok else "degraded", "checks": checks}
 
 
-@app.get("/", tags=["System"])
-async def root() -> dict:
-    return {
-        "name": "AI Resume Screener",
-        "version": "0.1.0",
-        "docs": "/docs",
-        "health": "/health",
-        "ready": "/ready",
-    }
+# ---------------------------------------------------------------------------
+# Static frontend serving (optional unified deployment)
+# ---------------------------------------------------------------------------
+
+_FRONTEND_DIST = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+
+if _FRONTEND_DIST.is_dir() and (_FRONTEND_DIST / "index.html").exists():
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+    from starlette.exceptions import HTTPException as StarletteHTTPException
+
+    # Mount assets directory
+    _assets_dir = _FRONTEND_DIST / "assets"
+    if _assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(_assets_dir)), name="assets")
+
+    @app.get("/", tags=["UI"])
+    async def serve_index():
+        return FileResponse(_FRONTEND_DIST / "index.html")
+
+    @app.exception_handler(StarletteHTTPException)
+    async def spa_fallback(request: Request, exc: StarletteHTTPException):
+        # Serve index.html for client-side routing on non-API 404s
+        if exc.status_code == 404 and not request.url.path.startswith(("/api", "/health", "/ready", "/docs", "/redoc", "/openapi.json")):
+            index_path = _FRONTEND_DIST / "index.html"
+            if index_path.exists():
+                return FileResponse(index_path)
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+else:
+    @app.get("/", tags=["System"])
+    async def root() -> dict:
+        return {
+            "name": "AI Resume Screener",
+            "version": "0.1.0",
+            "docs": "/docs",
+            "health": "/health",
+            "ready": "/ready",
+        }
+

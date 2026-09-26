@@ -15,9 +15,10 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Install Python dependencies first (layer caching)
+# Install Python dependencies (CPU-only PyTorch to minimize image size and memory)
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt
 
 # Download spaCy English model
@@ -27,8 +28,9 @@ RUN python -m spacy download en_core_web_sm
 COPY server/ .
 
 # Create storage directories
-RUN mkdir -p /app/storage/resumes /app/storage/faiss_index
+RUN mkdir -p /app/storage/resumes /app/storage/faiss_index /tmp/resumes /tmp/faiss_index
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+ENV PORT=8000
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --workers 1"]

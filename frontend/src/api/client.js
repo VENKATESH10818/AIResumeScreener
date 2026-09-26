@@ -1,10 +1,15 @@
 /**
- * Axios API client — all calls go through the Vite proxy to http://localhost:8000
+ * Axios API client
+ * In local dev (empty VITE_API_BASE_URL): proxies through Vite to backend
+ * In production: points to VITE_API_BASE_URL (e.g. Render backend URL)
  */
 import axios from 'axios'
 
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '')
+
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: API_BASE_URL ? `${API_BASE_URL}/api/v1` : '/api/v1',
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -52,7 +57,7 @@ export const submitFeedback = (payload) => api.post('/reviewer/feedback', payloa
 
 // ── System ───────────────────────────────────────────────────────────────────
 // /health and /ready are on root path (no /api/v1 prefix) — use a separate instance
-const rootApi = axios.create({ baseURL: '/' })
+const rootApi = axios.create({ baseURL: API_BASE_URL || '/' })
 export const getHealth = () => rootApi.get('/health')
 export const getReady  = () => rootApi.get('/ready')
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from pathlib import Path
 from typing import AsyncGenerator
 
 from sqlalchemy import (
@@ -31,6 +32,12 @@ from sqlalchemy.orm import DeclarativeBase, relationship
 DATABASE_URL = os.getenv(
     "DATABASE_URL", "sqlite+aiosqlite:////tmp/resume_screener.db"
 )
+
+# Convert Render Postgres URL (postgres:// or postgresql://) to asyncpg format
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+elif DATABASE_URL.startswith("postgresql://") and "+asyncpg" not in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 _is_sqlite = "sqlite" in DATABASE_URL
 
@@ -64,6 +71,12 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def init_db() -> None:
     """Create all tables on startup (idempotent — safe to call multiple times)."""
+    if _is_sqlite:
+        db_path = DATABASE_URL.split("///")[-1]
+        try:
+            Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

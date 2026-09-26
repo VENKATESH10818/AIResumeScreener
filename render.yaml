@@ -1,15 +1,19 @@
 services:
+  # ============================================================
+  # 1. Backend Web Service (FastAPI)
+  # ============================================================
   - type: web
     name: ai-resume-screener-api
     runtime: python
     region: oregon
     plan: free
     rootDir: .
-    buildCommand: pip install -r requirements.txt && python -m spacy download en_core_web_sm
-    startCommand: cd server && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && pip install --no-cache-dir -r requirements.txt && python -m spacy download en_core_web_sm
+    startCommand: cd server && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: 3.11.9
       - key: DATABASE_URL
         value: sqlite+aiosqlite:////tmp/resume_screener.db
       - key: STORAGE_PATH
@@ -27,6 +31,24 @@ services:
       - key: SPACY_MODEL
         value: en_core_web_sm
       - key: CORS_ORIGINS
-        value: http://localhost:5173,http://localhost:3000
+        value: "*"
       - key: LOG_LEVEL
         value: INFO
+
+  # ============================================================
+  # 2. Frontend Static Site (React + Vite)
+  # ============================================================
+  - type: static
+    name: ai-resume-screener-ui
+    region: oregon
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://ai-resume-screener-api.onrender.com

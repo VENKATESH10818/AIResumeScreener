@@ -30,7 +30,7 @@ def _get_model() -> SentenceTransformer:
     global _MODEL
     if _MODEL is None:
         logger.info("Loading sentence-transformers model: %s", EMBEDDING_MODEL)
-        _MODEL = SentenceTransformer(EMBEDDING_MODEL)
+        _MODEL = SentenceTransformer(EMBEDDING_MODEL, device="cpu")
         # Warm up — avoids cold-start latency on first real request
         _MODEL.encode(["warm up"], show_progress_bar=False)
         logger.info("Embedding model ready (dim=%d)", _MODEL.get_sentence_embedding_dimension())
