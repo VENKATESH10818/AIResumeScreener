@@ -38,8 +38,9 @@ services:
   # ============================================================
   # 2. Frontend Static Site (React + Vite)
   # ============================================================
-  - type: static
+  - type: web
     name: ai-resume-screener-ui
+    runtime: static
     region: oregon
     plan: free
     rootDir: frontend
